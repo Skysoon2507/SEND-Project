@@ -1,52 +1,38 @@
 version: "3"
 
 services:
-  nginx-proxy:
-    container_name: nginx-proxy
-    image: 'jwilder/nginx-proxy:alpine'
-    restart: always
-    ports:
-      - '80:80'
-      - '443:443'
-    environment:
-      - DEFAULT_HOST=${HOST}
-      - HSTS=off
-    volumes:
-      - /var/run/docker.sock:/tmp/docker.sock:ro
-      - proxy-certs:/etc/nginx/certs:ro
-      - proxy-vhost:/etc/nginx/vhost.d
-      - proxy-html:/usr/share/nginx/html
   
-  proxy-letsencrypt:
-    image: 'jrcs/letsencrypt-nginx-proxy-companion'
-    restart: always
-    environment:
-      - DEFAULT_EMAIL=${LETSENCRYPT_EMAIL}
-      - NGINX_PROXY_CONTAINER=nginx-proxy
-      - NGINX_DOCKER_GEN_CONTAINER=nginx-proxy
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - proxy-certs:/etc/nginx/certs
-      - proxy-vhost:/etc/nginx/vhost.d
-      - proxy-html:/usr/share/nginx/html
   
   send:
     image: '${DOCKER_SEND_IMAGE}'
     restart: always
     ports:
-      - '1234:1234'
+      - '8081:8080' # le port 8081 est exposé sur l'hôte et le 8080 est exposé sur le conteneur
     volumes:
       - ./uploads:/uploads
+      - ./custom_assets:/app/dist/custom_assets
     environment:
       - VIRTUAL_HOST=${HOST}
-      - VIRTUAL_PORT=1234
+      - VIRTUAL_PORT=8080 # le port 8080 est exposé sur le conteneurœ
       - DHPARAM_GENERATION=false
-      - LETSENCRYPT_HOST
-      - LETSENCRYPT_EMAIL
+      #- LETSENCRYPT_HOST
+      #- LETSENCRYPT_EMAIL
       - NODE_ENV=production
       - BASE_URL=${SEND_BASE_URL}
-      - PORT=1234
+      - PORT=8080 # le port 8080 est exposé sur le conteneur
       - REDIS_HOST=redis
+      - CUSTOM_TITLE=HIsend
+      - UI_CUSTOM_ASSETS_ICON=custom_assets/brandhi.png
+      - CUSTOM_FOOTER_TEXT=Ceci est un outil mis à disposition par l'équipe Cyber d'Handicap International.
+      - SEND_FOOTER_SOURCE_URL=https://hi.org
+      - UI_CUSTOM_ASSETS_FAVICON_16PX=custom_assets/logo_hi.ico
+      - UI_CUSTOM_ASSETS_FAVICON_32PX=custom_assets/logo_hi.ico
+      - UI_CUSTOM_ASSETS_WORDMARK=none
+      - UI_COLOR_PRIMARY=#0077c8
+      - UI_COLOR_ACCENT=#06038d
+      - EXPIRE_TIMES_SECONDS=300,3600,86400
+      - DOWNLOAD_COUNTS=1,2,3,4,5,10,15,25
+      - UI_CUSTOM_CSS=custom_assets/style.css
 
       # For local uploads storage
       - FILE_DIR=/uploads
